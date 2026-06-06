@@ -145,9 +145,43 @@ function CreateModal({ onClose, onSave }) {
             </div>
             <div className="divider"/>
             <div style={{ fontSize:12, fontWeight:600, color:'var(--text-dim)', marginBottom:8 }}>Attachments</div>
-            <div style={{ border:'1px dashed var(--border)', borderRadius:4, padding:'16px', textAlign:'center', fontSize:12, color:'var(--text-muted)', marginBottom:14 }}>
-              Drag & drop files or click to upload
-            </div>
+            <div
+  style={{ border:'1px dashed var(--border)', borderRadius:4, padding:'16px', textAlign:'center', fontSize:12, color:'var(--text-muted)', marginBottom:14, cursor:'pointer', transition:'border-color 0.15s' }}
+  onClick={() => document.getElementById('rfq-file-input').click()}
+  onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor='var(--green)'; }}
+  onDragLeave={e => { e.currentTarget.style.borderColor='var(--border)'; }}
+  onDrop={e => {
+    e.preventDefault();
+    e.currentTarget.style.borderColor='var(--border)';
+    const dropped = Array.from(e.dataTransfer.files);
+    setForm(f => ({ ...f, attachments: [...(f.attachments||[]), ...dropped] }));
+  }}
+>
+  <input
+    id="rfq-file-input"
+    type="file"
+    multiple
+    style={{ display:'none' }}
+    onChange={e => {
+      const picked = Array.from(e.target.files);
+      setForm(f => ({ ...f, attachments: [...(f.attachments||[]), ...picked] }));
+      e.target.value = '';
+    }}
+  />
+  {form.attachments?.length > 0 ? (
+    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+      {form.attachments.map((file, i) => (
+        <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--bg-input)', padding:'6px 10px', borderRadius:4 }}>
+          <span style={{ fontSize:11 }}>📎 {file.name} <span style={{ color:'var(--text-muted)' }}>({(file.size/1024).toFixed(1)} KB)</span></span>
+          <button className="btn btn-danger btn-xs" onClick={e=>{ e.stopPropagation(); setForm(f=>({ ...f, attachments: f.attachments.filter((_,j)=>j!==i) })); }}>×</button>
+        </div>
+      ))}
+      <span style={{ fontSize:10, color:'var(--text-muted)', marginTop:4 }}>Click or drop to add more</span>
+    </div>
+  ) : (
+    <span>Drag & drop files or click to upload</span>
+  )}
+</div>
             <div style={{ display:'flex', justifyContent:'space-between' }}>
               <button className="btn btn-outline" onClick={()=>setStep(2)}>← Back</button>
               <div style={{ display:'flex', gap:8 }}>
